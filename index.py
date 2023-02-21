@@ -16,6 +16,7 @@ collection = db['schedule']
 CORS(app)
 
 
+@app.route('/')
 @app.route('/home', endpoint="home_page", methods=['GET', 'DELETE'])
 def home_page():
     # GET Interview data from database
