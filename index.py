@@ -2,6 +2,8 @@ from flask import Flask
 from flask import jsonify, request
 from pymongo import MongoClient
 from flask_cors import CORS
+import urllib.request
+import json
 
 app = Flask(__name__)
 app.debug = True
@@ -15,18 +17,41 @@ collection = db['schedule']
 
 CORS(app)
 
+def insert_employees():
+    details = employees_page()
+    db['employee'].delete_many({})
+    for emp in details:
+        my_dict = {"e_id": emp['id'],
+                    "e_name": emp['first_name']+" "+emp['last_name'],
+                    "e_role": emp['employee_role']}
+        db['employee'].insert_one(my_dict)
+
+def employees_page():
+    url = "https://employee-data-platform.vercel.app/api/fetchall"
+    response = urllib.request.urlopen(url)
+
+    data = response.read()
+    data_dict = json.loads(data)
+    data = []
+    for c in data_dict:
+        data.append(dict(c))
+    return data
 
 @app.route('/')
 @app.route('/home', endpoint="home_page", methods=['GET', 'DELETE'])
 def home_page():
+
     # GET Interview data from database
     if request.method == 'GET':
+
+        # Insert employee details
+        insert_employees()
 
         collection.update_many({}, [{'$set': {'date': {'$toDate': '$date'}}}])
 
         result = collection.aggregate([
             {
-                '$lookup': {'from': 'employee', 'localField': 'employees', 'foreignField': '_id', 'as': 'employees'}
+                '$lookup': {'from': 'employee', 'localField': 'employees', 'foreignField': 'e_id', 'as': 'employees'}
             },
             {
                 "$lookup": {'from': 'candidate', 'localField': 'candidate', 'foreignField': '_id', 'as': 'candidate'}
@@ -68,14 +93,17 @@ def home_page():
         return jsonify({'status': 'Interview ID: ' + id + ' is deleted!'})
 
 
-@app.route('/interview/<id>', methods=['GET', 'PUT'])
+@app.route('/interview/<int:id>', methods=['GET', 'PUT'])
 def onedata(id):
     # GET a specific interview data by interview id
     if request.method == 'GET':
 
         result = collection.aggregate([
             {
-                '$lookup': {'from': 'employee', 'localField': 'employees', 'foreignField': '_id', 'as': 'employees'}
+                "$match": {"interview_id": id}
+            },
+            {
+                '$lookup': {'from': 'employee', 'localField': 'employees', 'foreignField': 'e_id', 'as': 'employees'}
             },
             {
                 "$lookup": {'from': 'candidate', 'localField': 'candidate', 'foreignField': '_id', 'as': 'candidate'}
@@ -95,9 +123,6 @@ def onedata(id):
                     "interview_end_time": 1,
                     "status": 1
                 }
-            },
-            {
-                "$match": {"interview_id": id}
             }
         ])
         print(id)
@@ -123,11 +148,11 @@ def onedata(id):
         ID = body['InterviewID']
         candidate = body['Candidate']
         itm = db.candidate.find_one({"c_id": candidate})
-        candidate_id = itm.get('_id')
+        candidate_id = itm.get('c_id')
 
         employees = body['Employees']
         itm = [db.employee.find_one({"e_id": emp}) for emp in employees]
-        employees_id = [item.get('_id') for item in itm]
+        employees_id = [item.get('e_id') for item in itm]
 
         start_time = body['StartTime']
         end_time = body['EndTime']
