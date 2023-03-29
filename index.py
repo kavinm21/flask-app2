@@ -90,7 +90,9 @@ def home_page():
 
         db.schedule.delete_one({'interview_id': id})
         print('\n # Deletion successful # \n')
-        return jsonify({'status': 'Interview ID: ' + id + ' is deleted!'})
+        response = jsonify({'status': 'Interview ID: ' + id + ' is deleted!'})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        return response
 
 
 @app.route('/interview/<int:id>', methods=['GET', 'PUT'])
