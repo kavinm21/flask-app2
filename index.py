@@ -105,7 +105,7 @@ def home_page():
                 '$lookup': {'from': 'employee', 'localField': 'employees', 'foreignField': 'e_id', 'as': 'employees'}
             },
             {
-                "$lookup": {'from': 'candidate', 'localField': 'candidate', 'foreignField': '_id', 'as': 'candidate'}
+                "$lookup": {'from': 'candidate', 'localField': 'candidate', 'foreignField': 'c_id', 'as': 'candidate'}
             },
             {
                 "$project": {
@@ -159,7 +159,7 @@ def onedata(id):
                 '$lookup': {'from': 'employee', 'localField': 'employees', 'foreignField': 'e_id', 'as': 'employees'}
             },
             {
-                "$lookup": {'from': 'candidate', 'localField': 'candidate', 'foreignField': '_id', 'as': 'candidate'}
+                "$lookup": {'from': 'candidate', 'localField': 'candidate', 'foreignField': 'c_id', 'as': 'candidate'}
             },
 
             {
@@ -196,40 +196,41 @@ def onedata(id):
 
     # UPDATE a interview slot details by id
     if request.method == 'PUT':
+
         body = request.json
 
-        ID = body['InterviewID']
-        candidate = body['Candidate']
-        itm = db.candidate.find_one({"c_id": candidate})
-        candidate_id = itm.get('c_id')
+        ID = body['interview_id']
 
-        employees = body['Employees']
-        itm = [db.employee.find_one({"e_id": emp}) for emp in employees]
-        employees_id = [item.get('e_id') for item in itm]
+        candidate_id = body['candidateId']
+        employees_id = body['employeeIds']
 
-        start_time = body['StartTime']
-        end_time = body['EndTime']
-        date = body['Date']
+        slot = body['slot']
+        day = body['day']
+        month = body['month']
+        year = body['year']
+
         status = body['status']
+
+        date = str(year) + "-" + str(month) + "-" + str(day)
+        d = datetime.datetime.strptime(date, "%Y-%m-%d")
 
         db['schedule'].update_one(
             {'interview_id': ID},
             {
                 "$set": {
-                    "date": date,
-                    "interview_start_time": start_time,
-                    "interview_end_time": end_time,
-                    "Candidate": candidate_id,
-                    "Employees": employees_id,
-                    "status": status
+                    "date": d,
+                    "candidate": candidate_id,
+                    "employees": employees_id,
+                    "slot": slot,
+                    "status": bool(status)
                 }
             }
         )
 
-        return jsonify({'status': 'Interview id: ' + id + ' is updated!'})
+        return jsonify({'status': 'Interview id: ' + str(ID) + ' is updated!'})
 
 
-@app.route('/NewInterview/', endpoint='new_interview', methods = ['POST'])
+@app.route('/NewInterview/', endpoint='new_interview', methods=['POST'])
 def new_interview():
 
     # Create a new interview slot details
@@ -242,32 +243,42 @@ def new_interview():
         interviews_id = []
         for i in doc:
             i = dict(i)
+            print(type(i['interview_id']))
             interviews_id.append(i['interview_id'])
 
         ID = max(interviews_id)+1
 
-        candidate_id = body['candidate_id']['c_id']
+        print(type(body['candidateId']))
+        print(type(body['employeeIds']))
 
-        employees = body['employees_id']
-        employees_id = [emp['e_id'] for emp in employees]
+        candidate_id = body['candidateId']
+        # ['c_id']
+        employees_id = body['employeeIds']
+        # employees_id = [emp['e_id'] for emp in employees]
 
         slot = body['slot']
-        date = datetime.datetime(body['date'])
+        day = body['day']
+        month = body['month']
+        year = body['year']
 
-        dict = {
+        date = str(year)+"-"+str(month)+"-"+str(day)
+        d = datetime.datetime.strptime(date, "%Y-%m-%d")
+        # date = datetime.datetime(year, month, day)
+
+        dict1 = {
             'interview_id': ID,
             'candidate': candidate_id,
             'employees': employees_id,
-            'date': date,
+            'date': d,
             'slot': slot,
             'status': True
          }
 
         db['schedule'].insert_one(
-            dict
+            dict1
         )
 
-        response = jsonify({'status': 'Interview id: ' + ID + ' is Inserted!'})
+        response = jsonify({'status': 'Interview slot with ID : ' + str(ID) + ' is Inserted!'})
         response.headers.add('Access-Control-Allow-Origin', '*')
 
         return response
