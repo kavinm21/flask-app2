@@ -233,7 +233,7 @@ def onedata(id):
 
         response = jsonify({'status': 'Interview id: ' + str(ID) + ' is updated!'})
         response.headers.add('Access-Control-Allow-Origin', '*')
-
+        response.headers.add('Access-Control-Allow-Origin', 'POST')
         return response
 
 
