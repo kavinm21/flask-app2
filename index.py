@@ -67,7 +67,8 @@ def employees_details():
         employees = db['employee'].find({}, {'_id': 0, 'e_id': 1, 'e_name': 1})
         response = []
         for i in employees:
-            response.append(dict(i))
+            response.append({"id": i['e_id'],
+                            "name": i['e_ name']})
         response = jsonify(response)
         response.headers.add('Access-Control-Allow-Origin', '*')
         return response
@@ -79,7 +80,8 @@ def candidate_details():
         candidates = db['candidate'].find({}, {'_id': 0, 'c_id': 1, 'c_name': 1})
         response = []
         for i in candidates:
-            response.append(dict(i))
+            response.append({"id": i['c_id'],
+                            "name": i['c_ name']})
         response = jsonify(response)
         response.headers.add('Access-Control-Allow-Origin', '*')
         return response
