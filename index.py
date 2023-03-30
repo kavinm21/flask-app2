@@ -1,7 +1,7 @@
 from flask import Flask
 from flask import jsonify, request
 from pymongo import MongoClient
-from flask_cors import CORS
+from flask_cors import CORS,cross_origin
 import urllib.request
 import json
 import datetime
@@ -231,10 +231,14 @@ def onedata(id):
             }
         )
 
-        return jsonify({'status': 'Interview id: ' + str(ID) + ' is updated!'})
+        response = jsonify({'status': 'Interview id: ' + str(ID) + ' is updated!'})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+
+        return response
 
 
 @app.route('/NewInterview/', endpoint='new_interview', methods=['POST'])
+@cross_origin()
 def new_interview():
 
     # Create a new interview slot details
