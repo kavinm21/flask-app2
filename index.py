@@ -233,7 +233,6 @@ def onedata(id):
 
         response = jsonify({'status': 'Interview id: ' + str(ID) + ' is updated!'})
         response.headers.add('Access-Control-Allow-Origin', '*')
-        response.headers.add('Access-Control-Allow-Origin', 'POST')
         return response
 
 
@@ -288,6 +287,7 @@ def new_interview():
 
         response = jsonify({'status': 'Interview slot with ID : ' + str(ID) + ' is Inserted!'})
         response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Origin', 'POST')
 
         return response
 
