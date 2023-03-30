@@ -37,6 +37,32 @@ def employees_page():
         data.append(dict(c))
     return data
 
+
+@app.route('/EmployeeDetails/', endpoint= 'employees_details', methods = ['GET'])
+def employees_details():
+
+    if request.method == 'GET':
+        employees = db['employee'].find({}, {'_id': 0, 'e_id': 1, 'e_name': 1})
+        response = []
+        for i in employees:
+            response.append(dict(i))
+        response = jsonify(response)
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        return response
+
+
+@app.route('/CandidateDetails/', endpoint= 'candidate_details', methods = ['GET'])
+def candidate_details():
+    if request.method == 'GET':
+        candidates = db['candidate'].find({}, {'_id': 0, 'c_id': 1, 'c_name': 1})
+        response = []
+        for i in candidates:
+            response.append(dict(i))
+        response = jsonify(response)
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        return response
+
+
 @app.route('/')
 @app.route('/home', endpoint="home_page", methods=['GET', 'DELETE'])
 def home_page():
@@ -176,6 +202,42 @@ def onedata(id):
         )
 
         return jsonify({'status': 'Interview id: ' + id + ' is updated!'})
+
+
+@app.route('/NewInterview/', endpoint='new_interview', methods = ['POST'])
+def new_interview():
+
+    # Create a new interview slot details
+    if request.method == 'POST':
+
+        body = request.json
+
+        ID = 1
+        candidate_id = body['candidate_id']
+        # itm = db.candidate.find_one({"c_id": candidate})
+        # candidate_id = itm.get('c_id')
+
+        employees_id = body['employees_id']
+        # itm = [db.employee.find_one({"e_id": emp}) for emp in employees]
+        # employees_id = [item.get('e_id') for item in itm]
+
+        slot = body['slot']
+        date = body['date']
+
+        dict = {
+            'interview_id' : ID,
+            'candidate' : candidate_id,
+            'employees' : employees_id,
+            'date' : date,
+            'slot': slot,
+            'status' :True
+         }
+
+        db['schedule'].insert_one(
+            dict
+        )
+
+        return jsonify({'status': 'Interview id: ' + id + ' is Inserted!'})
 
 
 if __name__ == '__main__':
