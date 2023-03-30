@@ -69,7 +69,7 @@ def employees_details():
         for i in employees:
             i = dict(i)
             response.append({"id": i['e_id'],
-                            "name": i['e_ name']})
+                            "name": i['e_name']})
         response = jsonify(response)
         response.headers.add('Access-Control-Allow-Origin', '*')
         return response
@@ -83,7 +83,7 @@ def candidate_details():
         for i in candidates:
             i = dict(i)
             response.append({"id": i['c_id'],
-                            "name": i['c_ name']})
+                            "name": i['c_name']})
         response = jsonify(response)
         response.headers.add('Access-Control-Allow-Origin', '*')
         return response
