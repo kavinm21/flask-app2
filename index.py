@@ -37,6 +37,27 @@ def employees_page():
         data.append(dict(c))
     return data
 
+def insert_candidate():
+    details = employees_page()
+    db['candidate'].delete_many({})
+    for can in details:
+        my_dict = {
+                    "c_id": can['id'],
+                    "c_name": can['name']
+                   }
+        db['candidate'].insert_one(my_dict)
+
+def candidate_page():
+    url = "http://3.6.195.51:3000/api/v1/candidates/get_all_candidates"
+    response = urllib.request.urlopen(url)
+
+    data = response.read()
+    data_dict = json.loads(data)
+    data = []
+    for c in data_dict:
+        data.append(dict(c))
+    return data
+
 
 @app.route('/EmployeeDetails/', endpoint= 'employees_details', methods = ['GET'])
 def employees_details():
@@ -72,6 +93,9 @@ def home_page():
 
         # Insert employee details
         insert_employees()
+
+        # Insert Candidates
+        # insert_candidate()
 
         collection.update_many({}, [{'$set': {'date': {'$toDate': '$date'}}}])
 
@@ -121,7 +145,7 @@ def home_page():
         return response
 
 
-@app.route('/interview/<int:id>', methods=['GET', 'PUT'])
+@app.route('/interview/<int:id>', endpoint= 'onedata', methods=['GET', 'PUT'])
 def onedata(id):
     # GET a specific interview data by interview id
     if request.method == 'GET':
@@ -212,32 +236,40 @@ def new_interview():
 
         body = request.json
 
-        ID = 1
-        candidate_id = body['candidate_id']
-        # itm = db.candidate.find_one({"c_id": candidate})
-        # candidate_id = itm.get('c_id')
+        doc = collection.find({}, {'_id': 0, 'interview_id': 1})
 
-        employees_id = body['employees_id']
-        # itm = [db.employee.find_one({"e_id": emp}) for emp in employees]
-        # employees_id = [item.get('e_id') for item in itm]
+        interviews_id = []
+        for i in doc:
+            i = dict(i)
+            interviews_id.append(i['interview_id'])
+
+        ID = max(interviews_id)+1
+
+        candidate_id = body['candidate_id']['c_id']
+
+        employees = body['employees_id']
+        employees_id = [emp['e_id'] for emp in employees]
 
         slot = body['slot']
         date = body['date']
 
         dict = {
-            'interview_id' : ID,
-            'candidate' : candidate_id,
-            'employees' : employees_id,
-            'date' : date,
+            'interview_id': ID,
+            'candidate': candidate_id,
+            'employees': employees_id,
+            'date': date,
             'slot': slot,
-            'status' :True
+            'status': True
          }
 
         db['schedule'].insert_one(
             dict
         )
 
-        return jsonify({'status': 'Interview id: ' + id + ' is Inserted!'})
+        response = jsonify({'status': 'Interview id: ' + ID + ' is Inserted!'})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+
+        return response
 
 
 if __name__ == '__main__':
