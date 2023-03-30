@@ -4,6 +4,7 @@ from pymongo import MongoClient
 from flask_cors import CORS
 import urllib.request
 import json
+import datetime
 
 app = Flask(__name__)
 app.debug = True
@@ -92,7 +93,7 @@ def home_page():
     if request.method == 'GET':
 
         # Insert employee details
-        insert_employees()
+        # insert_employees()
 
         # Insert Candidates
         # insert_candidate()
@@ -251,7 +252,7 @@ def new_interview():
         employees_id = [emp['e_id'] for emp in employees]
 
         slot = body['slot']
-        date = body['date']
+        date = datetime.datetime(body['date'])
 
         dict = {
             'interview_id': ID,
